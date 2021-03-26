@@ -1,0 +1,78 @@
+{
+	"name": "sonosbrowser",
+	"displayName": "sonos",
+	"description": "A Sonos Browser",
+	"version": "0.0.1",
+	"engines": {
+		"vscode": "^1.54.0"
+	},
+	"license": "MIT",
+	"publisher": "JamesBattersby",
+	"author": {
+		"name": "James Battersby"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/jamesbattersby/vscode-sonos.git"
+	},
+	"bugs": {
+		"url": "https://github.com/jamesbattersby/vscode-sonos/issues"
+	},
+	"homepage": "https://github.com/jamesbattersby/vscode-sonos/blob/master/README.md",
+	"categories": [
+		"Other"
+	],
+	"preview": true,
+	"keywords": [
+		"sonos",
+		"media",
+		"media-player",
+		"media-browser"
+	],
+	"activationEvents": [
+		"*"
+	],
+	"main": "./out/extension.js",
+	"contributes": {
+		"viewsContainers": {
+			"activitybar": [
+				{
+					"id": "sonos-container",
+					"title": "Sonos Explorer",
+					"icon": "media/s-icon.png"
+				}
+			]
+		},
+		"views": {
+			"sonos-container": [
+				{
+					"id": "sonosExplorer",
+					"name": "Sonos Explorer"
+				}
+			]
+		},
+		"commands": []
+	},
+	"scripts": {
+		"vscode:prepublish": "npm run compile",
+		"compile": "tsc -p ./",
+		"watch": "tsc -watch -p ./",
+		"pretest": "npm run compile",
+		"test": "node ./out/test/runTest.js"
+	},
+	"devDependencies": {
+		"@types/glob": "^7.1.1",
+		"@types/mocha": "^5.2.6",
+		"@types/node": "^10.17.55",
+		"@types/vscode": "^1.54.0",
+		"glob": "^7.1.4",
+		"mocha": "^6.1.4",
+		"tslint": "^5.12.1",
+		"typescript": "^3.9.9",
+		"vscode-test": "^1.5.1"
+	},
+	"dependencies": {
+		"dgram-as-promised": "^5.0.1",
+		"sonos": "^1.14.1"
+	}
+}
