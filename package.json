@@ -51,7 +51,72 @@
 				}
 			]
 		},
-		"commands": []
+		"commands": [
+			{
+				"command": "sonosExplorer.mute",
+				"title": "Mute",
+				"icon": "$(mute)"
+			},
+			{
+				"command": "sonosExplorer.unmute",
+				"title": "Unmute",
+				"icon": "$(unmute)"
+			},
+			{
+				"command": "sonosExplorer.play",
+				"title": "Play",
+				"icon": "$(play-circle)"
+			},
+			{
+				"command": "sonosExplorer.pause",
+				"title": "Pause",
+				"icon": "$(debug-pause)"
+			},
+			{
+				"command": "sonosExplorer.removeFromGroup",
+				"title": "Remove From Group",
+				"icon": "$(diff-removed)"
+			},
+			{
+				"command": "sonosExplorer.addToGroup",
+				"title": "Add To Group",
+				"icon": "$(diff-added)"
+			},
+			{
+				"command": "sonosExplorer.removeFromQueue",
+				"title": "Remove From Queue",
+				"icon": "$(dash)"
+			},
+			{
+				"command": "sonosExplorer.addToQueue",
+				"title": "Add To Queue",
+				"icon": "$(plus)"
+			}
+		],
+		"menus": {
+			"view/item/context": [
+				{
+					"command": "sonosExplorer.mute",
+					"when": "view == sonosExplorer && viewItem =~ />mutable/i",
+					"group": "inline"
+				},
+				{
+					"command": "sonosExplorer.unmute",
+					"when": "view == sonosExplorer && viewItem =~ />unmutable/i",
+					"group": "inline"
+				}
+			],
+			"commandPalette": [
+				{
+					"command": "sonosExplorer.mute",
+					"when": "false"
+				},
+				{
+					"command": "sonosExplorer.unmute",
+					"when": "false"
+				}
+			]
+		}
 	},
 	"scripts": {
 		"vscode:prepublish": "npm run compile",
