@@ -53,15 +53,35 @@ export class GenericNode extends SonosNode {
 export class SonosGroupNode extends SonosNode {
     private _info: any;
     private _coordinator: string;
-    constructor(info: any) {
+    private _sonos;
+    private _parent;
+
+    constructor(info: any, parent: any) {
         super();
         this._info = info;
         this.label = info.Name;
+        this._parent = parent;
         this.collapsibleState = TreeItemCollapsibleState.Collapsed;
         this._coordinator = info.host;
         this.children.push(new SonosDevicesNode(this._info));
         this.children.push(new SonosQueueNode(this._coordinator));
         this.addToContext('>mutable')
+        this._sonos = new Sonos(this._coordinator);
+        this.setupSubscriptions();
+    }
+
+    private setupSubscriptions() {
+        this._sonos.on('PlayState', (state: any) => {
+            if (state === 'playing') {
+                this.addToContext(">stoppable");
+                this.removeFromContext(">playable");
+            }
+            if (state === 'paused') {
+                this.removeFromContext(">stoppable");
+                this.addToContext(">playable");
+            }
+            this._parent.refresh(this);
+        });
     }
 
     public getChildren(): SonosNode[] {
@@ -84,6 +104,21 @@ export class SonosGroupNode extends SonosNode {
                 })
             }
         });
+    }
+
+    public async play(state: boolean) {
+        let device: any = new Sonos(this._coordinator);
+        await device.togglePlayback()
+    }
+
+    public async nextTrack() {
+        let device: any = new Sonos(this._coordinator);
+        await device.next()
+    }
+
+    public async previousTrack() {
+        let device: any = new Sonos(this._coordinator);
+        await device.previous()
     }
 
     public getDevice() {

@@ -4,7 +4,7 @@ import {
     TreeView, TreeDataProvider, Event, EventEmitter, TreeItem, ProviderResult,
     ExtensionContext, window, commands
 } from 'vscode';
-import { SonosNode as SonosNode, SonosDeviceNode, SonosGroupNode } from './sonosNode';
+import { SonosNode, SonosGroupNode } from './sonosNode';
 const { DeviceDiscovery } = require('sonos');
 
 export class SonosExplorer {
@@ -16,6 +16,10 @@ export class SonosExplorer {
 
         commands.registerCommand('sonosExplorer.mute', item => sonosNodeProvider.mute(item));
         commands.registerCommand('sonosExplorer.unmute', item => sonosNodeProvider.unmute(item));
+        commands.registerCommand('sonosExplorer.play', item => sonosNodeProvider.play(item));
+        commands.registerCommand('sonosExplorer.pause', item => sonosNodeProvider.pause(item));
+        commands.registerCommand('sonosExplorer.nextTrack', item => item.nextTrack());
+        commands.registerCommand('sonosExplorer.previousTrack', item => item.previousTrack());
     }
 }
 
@@ -51,7 +55,6 @@ export class SonosNodeProvider implements TreeDataProvider<SonosNode> {
         item.removeFromContext(">mutable");
         item.muteGroup(true);
         this.refresh(item);
-        console.log("Mute Pressed!");
     }
 
     public async unmute(item: SonosGroupNode) {
@@ -59,7 +62,20 @@ export class SonosNodeProvider implements TreeDataProvider<SonosNode> {
         item.removeFromContext(">unmutable");
         item.muteGroup(false);
         this.refresh(item);
-        console.log("Mute Pressed!");
+    }
+
+    public async play(item: SonosGroupNode) {
+        item.addToContext(">stoppable");
+        item.removeFromContext(">playable");
+        item.play(true);
+        this.refresh(item);
+    }
+
+    public async pause(item: SonosGroupNode) {
+        item.addToContext(">playable");
+        item.removeFromContext(">stoppable");
+        item.play(false);
+        this.refresh(item);
     }
 
     private async getDevices(): Promise<SonosNode[]> {
@@ -67,10 +83,17 @@ export class SonosNodeProvider implements TreeDataProvider<SonosNode> {
             device.getAllGroups().then((groups: any) => {
                 let updated: boolean = false;
                 groups.forEach((group: any) => {
-                    let newNode: SonosGroupNode = new SonosGroupNode(group)
+                    let newNode: SonosGroupNode = new SonosGroupNode(group, this)
                     if (!this._groupNodes.find(node => node.label === newNode.label)) {
                         this._groupNodes.push(newNode);
-                        // newNode.getQueue();
+                        newNode.getDevice().getCurrentState().then((result: any) => {
+                            if (result === 'playing') {
+                                newNode.addToContext('>stoppable');
+                            } else {
+                                newNode.addToContext('>playable');
+                            }
+                            this.refresh(newNode);
+                        });
                         updated = true;
                     }
                 })

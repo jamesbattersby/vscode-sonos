@@ -65,7 +65,7 @@
 			{
 				"command": "sonosExplorer.play",
 				"title": "Play",
-				"icon": "$(play-circle)"
+				"icon": "$(play)"
 			},
 			{
 				"command": "sonosExplorer.pause",
@@ -91,6 +91,16 @@
 				"command": "sonosExplorer.addToQueue",
 				"title": "Add To Queue",
 				"icon": "$(plus)"
+			},
+			{
+				"command": "sonosExplorer.nextTrack",
+				"title": "Next",
+				"icon": "$(debug-continue)"
+			},
+			{
+				"command": "sonosExplorer.previousTrack",
+				"title": "Previous",
+				"icon": "$(debug-reverse-continue)"
 			}
 		],
 		"menus": {
@@ -104,6 +114,26 @@
 					"command": "sonosExplorer.unmute",
 					"when": "view == sonosExplorer && viewItem =~ />unmutable/i",
 					"group": "inline"
+				},
+				{
+					"command": "sonosExplorer.play",
+					"when": "view == sonosExplorer && viewItem =~ />playable/i",
+					"group": "inline"
+				},
+				{
+					"command": "sonosExplorer.pause",
+					"when": "view == sonosExplorer && viewItem =~ />stoppable/i",
+					"group": "inline"
+				},
+				{
+					"command": "sonosExplorer.nextTrack",
+					"when": "view == sonosExplorer && viewItem =~ />stoppable/i",
+					"group": "inline"
+				},
+				{
+					"command": "sonosExplorer.previousTrack",
+					"when": "view == sonosExplorer && viewItem =~ />stoppable/i",
+					"group": "inline"
 				}
 			],
 			"commandPalette": [
@@ -113,6 +143,22 @@
 				},
 				{
 					"command": "sonosExplorer.unmute",
+					"when": "false"
+				},
+				{
+					"command": "sonosExplorer.play",
+					"when": "false"
+				},
+				{
+					"command": "sonosExplorer.pause",
+					"when": "false"
+				},
+				{
+					"command": "sonosExplorer.nextTrack",
+					"when": "false"
+				},
+				{
+					"command": "sonosExplorer.previousTrack",
 					"when": "false"
 				}
 			]
