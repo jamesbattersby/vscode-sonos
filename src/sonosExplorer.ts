@@ -105,6 +105,13 @@ export class SonosNodeProvider implements TreeDataProvider<SonosNode> {
                             }
                             this.refresh(newNode);
                         });
+                        newNode.getDevice().on('CurrentTrack', async (track: any) => {
+                            newNode.setPlayingTrack(track.artist, track.title);
+                            this.refresh(newNode);
+                        });
+                        newNode.getDevice().on('QueueChanged', async (event: any) => {
+                            console.log(`Queue changed ${event}`);
+                        });
                         updated = true;
                     }
                 })

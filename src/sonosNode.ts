@@ -39,6 +39,12 @@ export class SonosNode extends TreeItem {
         this.contextValue = this.contextValue?.replace(toRemove, '');
     }
 
+    public isInContext(query: string) {
+        if (this.contextValue) {
+            return (this.contextValue.indexOf(query) != -1)
+        }
+        return false;
+    }
 }
 
 export class GenericNode extends SonosNode {
@@ -85,6 +91,15 @@ export class SonosGroupNode extends SonosNode {
                     let device = new Sonos((deviceNode as SonosDeviceNode).getHost());
                     await device.setMuted(state);
                 })
+            }
+        });
+    }
+
+    public setPlayingTrack(artist: string, title: string) {
+        let isPlaying: boolean = this.isInContext('>stoppable');
+        this.children.forEach((childNode: SonosNode) => {
+            if (childNode instanceof SonosQueueNode) {
+                childNode.setPlayingTrack(artist, title, isPlaying);
             }
         });
     }
@@ -195,12 +210,59 @@ export class SonosQueueNode extends SonosNode {
         this.populate();
     }
 
+    public setPlayingTrack(artist: string, title: string, playing: boolean) {
+        this.children.forEach((track: SonosNode) => {
+            (track as SonosTrack).updatePlayingState(artist, title, playing)
+        });
+    }
+
     public async populate() {
         let device: any = new Sonos(this._coordinator);
         device.getQueue().then((result: any) => {
             result.items.forEach((track: any) => {
-                this.children.push(new GenericNode(`${track.artist} - ${track.album} - ${track.title}`))
+                this.children.push(new SonosTrack(track.album, track.artist, track.title))
             });
         })
+    }
+}
+
+export class SonosTrack extends SonosNode {
+    private _album: string;
+    private _artist: string;
+    private _title: string;
+
+    constructor(album: string, artist: string, title: string) {
+        super();
+        this._album = album;
+        this._artist = artist;
+        this._title = title;
+        this.label = `${this._artist} - ${this._album} - ${this._title}`
+    }
+
+    public updatePlayingState(artist: string, title: string, playing: boolean) {
+        if (!playing) {
+            this.setPlayingState(false);
+        } else {
+            this.setPlayingState(this.compare(artist, title));
+        }
+    }
+
+    private setPlayingState(playing: boolean) {
+        if (playing) {
+            this.addToContext('>playingTrack');
+            this.removeFromContext('>stoppedTrack');
+            this.description = 'now playing';
+        } else {
+            this.removeFromContext('>playingTrack');
+            this.addToContext('>stoppedTrack');
+            this.description = '';
+        }
+    }
+
+    private compare(artist: string, title: string): boolean {
+        if (artist === this._artist && title === this._title) {
+            return true;
+        }
+        return false;
     }
 }

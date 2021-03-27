@@ -73,6 +73,16 @@
 				"icon": "$(debug-pause)"
 			},
 			{
+				"command": "sonosExplorer.playTrack",
+				"title": "Play",
+				"icon": "$(debug-start)"
+			},
+			{
+				"command": "sonosExplorer.stopTrack",
+				"title": "Stop",
+				"icon": "$(debug-pause)"
+			},
+			{
 				"command": "sonosExplorer.removeFromGroup",
 				"title": "Remove From Group",
 				"icon": "$(diff-removed)"
@@ -126,6 +136,16 @@
 					"group": "inline"
 				},
 				{
+					"command": "sonosExplorer.playTrack",
+					"when": "view == sonosExplorer && viewItem =~ />stoppedTrack/i",
+					"group": "inline"
+				},
+				{
+					"command": "sonosExplorer.stopTrack",
+					"when": "view == sonosExplorer && viewItem =~ />playingTrack/i",
+					"group": "inline"
+				},
+				{
 					"command": "sonosExplorer.nextTrack",
 					"when": "view == sonosExplorer && viewItem =~ />stoppable/i",
 					"group": "inline"
@@ -137,6 +157,14 @@
 				}
 			],
 			"commandPalette": [
+				{
+					"command": "sonosExplorer.stopTrack",
+					"when": "false"
+				},
+				{
+					"command": "sonosExplorer.playTrack",
+					"when": "false"
+				},
 				{
 					"command": "sonosExplorer.mute",
 					"when": "false"
