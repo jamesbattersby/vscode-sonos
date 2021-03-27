@@ -9,11 +9,10 @@ export class SonosNode extends TreeItem {
     children: SonosNode[];
     constructor() {
         super('Working...');
-        let extension: Extension<any> | undefined = extensions.getExtension("MediaKind.mkcontroller");
+        let extension: Extension<any> | undefined = extensions.getExtension("JamesBattersby.sonosbrowser");
         if (extension) {
             this._extensionPath = extension.extensionPath;
         }
-
         this.children = [];
     }
 
@@ -67,21 +66,6 @@ export class SonosGroupNode extends SonosNode {
         this.children.push(new SonosQueueNode(this._coordinator));
         this.addToContext('>mutable')
         this._sonos = new Sonos(this._coordinator);
-        this.setupSubscriptions();
-    }
-
-    private setupSubscriptions() {
-        this._sonos.on('PlayState', (state: any) => {
-            if (state === 'playing') {
-                this.addToContext(">stoppable");
-                this.removeFromContext(">playable");
-            }
-            if (state === 'paused') {
-                this.removeFromContext(">stoppable");
-                this.addToContext(">playable");
-            }
-            this._parent.refresh(this);
-        });
     }
 
     public getChildren(): SonosNode[] {
@@ -89,8 +73,7 @@ export class SonosGroupNode extends SonosNode {
     }
 
     public async getQueue() {
-        let device: any = new Sonos(this._coordinator);
-        device.getQueue().then((result: any) => {
+        this._sonos.getQueue().then((result: any) => {
             console.log(JSON.stringify(result, null, 2));
         })
     }
@@ -98,7 +81,7 @@ export class SonosGroupNode extends SonosNode {
     public async muteGroup(state: boolean) {
         this.children.forEach((childNode: SonosNode) => {
             if (childNode instanceof SonosDevicesNode) {
-                childNode.children.forEach(async (deviceNode: SonosNode)=> {
+                childNode.children.forEach(async (deviceNode: SonosNode) => {
                     let device = new Sonos((deviceNode as SonosDeviceNode).getHost());
                     await device.setMuted(state);
                 })
@@ -107,22 +90,19 @@ export class SonosGroupNode extends SonosNode {
     }
 
     public async play(state: boolean) {
-        let device: any = new Sonos(this._coordinator);
-        await device.togglePlayback()
+        await this._sonos.togglePlayback()
     }
 
     public async nextTrack() {
-        let device: any = new Sonos(this._coordinator);
-        await device.next()
+        await this._sonos.next()
     }
 
     public async previousTrack() {
-        let device: any = new Sonos(this._coordinator);
-        await device.previous()
+        await this._sonos.previous()
     }
 
     public getDevice() {
-        return new Sonos(this._coordinator);
+        return this._sonos;
     }
 }
 

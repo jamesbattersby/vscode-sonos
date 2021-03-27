@@ -65,7 +65,7 @@
 			{
 				"command": "sonosExplorer.play",
 				"title": "Play",
-				"icon": "$(play)"
+				"icon": "$(debug-start)"
 			},
 			{
 				"command": "sonosExplorer.pause",

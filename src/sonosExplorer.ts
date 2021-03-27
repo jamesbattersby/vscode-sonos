@@ -94,6 +94,17 @@ export class SonosNodeProvider implements TreeDataProvider<SonosNode> {
                             }
                             this.refresh(newNode);
                         });
+                        newNode.getDevice().on('PlayState', async (state: any) => {
+                            if (state === 'playing') {
+                                newNode.addToContext(">stoppable");
+                                newNode.removeFromContext(">playable");
+                            }
+                            if (state === 'paused') {
+                                newNode.removeFromContext(">stoppable");
+                                newNode.addToContext(">playable");
+                            }
+                            this.refresh(newNode);
+                        });
                         updated = true;
                     }
                 })
