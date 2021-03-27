@@ -52,8 +52,8 @@ export class GenericNode extends SonosNode {
 export class SonosGroupNode extends SonosNode {
     private _info: any;
     private _coordinator: string;
-    private _sonos;
-    private _parent;
+    private _sonos: any;
+    private _parent: any;
 
     constructor(info: any, parent: any) {
         super();
