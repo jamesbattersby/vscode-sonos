@@ -53,16 +53,6 @@
 		},
 		"commands": [
 			{
-				"command": "sonosExplorer.mute",
-				"title": "Mute",
-				"icon": "$(mute)"
-			},
-			{
-				"command": "sonosExplorer.unmute",
-				"title": "Unmute",
-				"icon": "$(unmute)"
-			},
-			{
 				"command": "sonosExplorer.play",
 				"title": "Play",
 				"icon": "$(debug-start)"
@@ -103,14 +93,24 @@
 				"icon": "$(plus)"
 			},
 			{
+				"command": "sonosExplorer.previousTrack",
+				"title": "Previous",
+				"icon": "$(debug-reverse-continue)"
+			},
+			{
 				"command": "sonosExplorer.nextTrack",
 				"title": "Next",
 				"icon": "$(debug-continue)"
 			},
 			{
-				"command": "sonosExplorer.previousTrack",
-				"title": "Previous",
-				"icon": "$(debug-reverse-continue)"
+				"command": "sonosExplorer.mute",
+				"title": "Mute",
+				"icon": "$(mute)"
+			},
+			{
+				"command": "sonosExplorer.unmute",
+				"title": "Unmute",
+				"icon": "$(unmute)"
 			}
 		],
 		"menus": {

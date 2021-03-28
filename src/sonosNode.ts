@@ -57,8 +57,8 @@ export class GenericNode extends SonosNode {
 
 export class SonosGroupNode extends SonosNode {
     private _info: any;
-    private _coordinator: string;
-    private _sonos: any;
+    private _coordinatorAddress: string;
+    private _coordinatorDevice: any;
     private _parent: any;
 
     constructor(info: any, parent: any) {
@@ -67,21 +67,23 @@ export class SonosGroupNode extends SonosNode {
         this.label = info.Name;
         this._parent = parent;
         this.collapsibleState = TreeItemCollapsibleState.Collapsed;
-        this._coordinator = info.host;
+        this._coordinatorAddress = info.host;
+        this._coordinatorDevice = new Sonos(this._coordinatorAddress);
         this.children.push(new SonosDevicesNode(this._info));
-        this.children.push(new SonosQueueNode(this._coordinator));
+        this.children.push(new SonosQueueNode(this));
         this.addToContext('>mutable')
-        this._sonos = new Sonos(this._coordinator);
     }
 
     public getChildren(): SonosNode[] {
         return this.children;
     }
 
-    public async getQueue() {
-        this._sonos.getQueue().then((result: any) => {
-            console.log(JSON.stringify(result, null, 2));
-        })
+    public refreshQueue() {
+        this.children.forEach((childNode: SonosNode) => {
+            if (childNode instanceof SonosQueueNode) {
+                childNode.updateQueue();
+            }
+        });
     }
 
     public async muteGroup(state: boolean) {
@@ -95,39 +97,37 @@ export class SonosGroupNode extends SonosNode {
         });
     }
 
-    public setPlayingTrack(artist: string, title: string) {
+    public setPlayingTrack(track: any) {
         let isPlaying: boolean = this.isInContext('>stoppable');
         this.children.forEach((childNode: SonosNode) => {
             if (childNode instanceof SonosQueueNode) {
-                childNode.setPlayingTrack(artist, title, isPlaying);
+                childNode.setPlayingTrack(track, isPlaying);
             }
         });
     }
 
     public async play(state: boolean) {
-        await this._sonos.togglePlayback()
+        await this._coordinatorDevice.togglePlayback()
     }
 
     public async nextTrack() {
-        await this._sonos.next()
+        await this._coordinatorDevice.next()
     }
 
     public async previousTrack() {
-        await this._sonos.previous()
+        await this._coordinatorDevice.previous()
     }
 
-    public getDevice() {
-        return this._sonos;
+    public getCoordinatingDevice() {
+        return this._coordinatorDevice;
     }
 }
 
 export class SonosDevicesNode extends SonosNode {
-    private _coordinator: any;
     private _info: any;
 
     constructor(info: any) {
         super();
-        this._coordinator = info.host;
         this._info = info;
         this.label = 'Devices';
         this.collapsibleState = TreeItemCollapsibleState.Collapsed;
@@ -135,8 +135,14 @@ export class SonosDevicesNode extends SonosNode {
     }
 
     public async populate() {
+        let unsorted: any[] = [];
         this._info.ZoneGroupMember.forEach((member: any) => {
-            this.children.push(new SonosDeviceNode(member));
+            unsorted.push(new SonosDeviceNode(member));
+        })
+        this.children = unsorted.sort((n1: any, n2: any) => {
+            if (n1.label > n2.label) return 1;
+            if (n1.label < n2.label) return -1;
+            return 0;
         })
     }
 }
@@ -200,69 +206,71 @@ export class SonosDeviceNode extends SonosNode {
 }
 
 export class SonosQueueNode extends SonosNode {
-    private _coordinator: any;
+    private _parent: SonosGroupNode;
 
-    constructor(coordinator: string) {
+    constructor(parent: SonosGroupNode) {
         super();
-        this._coordinator = coordinator;
         this.label = 'Queue';
+        this._parent = parent;
         this.collapsibleState = TreeItemCollapsibleState.Collapsed;
-        this.populate();
+        this.updateQueue();
     }
 
-    public setPlayingTrack(artist: string, title: string, playing: boolean) {
-        this.children.forEach((track: SonosNode) => {
-            (track as SonosTrack).updatePlayingState(artist, title, playing)
+    public setPlayingTrack(track: any, playing: boolean) {
+        this.children.forEach((trackNode: SonosNode) => {
+            (trackNode as SonosTrackNode).updatePlayingState(track, playing)
         });
     }
 
-    public async populate() {
-        let device: any = new Sonos(this._coordinator);
-        device.getQueue().then((result: any) => {
-            result.items.forEach((track: any) => {
-                this.children.push(new SonosTrack(track.album, track.artist, track.title))
-            });
+    public async updateQueue() {
+        this.children = [];
+        let currentState: any = await this.getCoordinatingDevice().getCurrentState();
+        let currentTrack: any = await this.getCoordinatingDevice().currentTrack();
+        let currentQueue: any = await this.getCoordinatingDevice().getQueue();
+        currentQueue.items.forEach((track: any) => {
+            this.children.push(new SonosTrackNode(track, track.uri === currentTrack.uri, currentState, this))
         })
+    }
+
+    public getCoordinatingDevice() {
+        return this._parent.getCoordinatingDevice();
     }
 }
 
-export class SonosTrack extends SonosNode {
-    private _album: string;
-    private _artist: string;
-    private _title: string;
+export class SonosTrackNode extends SonosNode {
+    private _parent: SonosQueueNode;
+    private _devicePlaying: boolean;
+    private _current: boolean;
+    private _track: any;
 
-    constructor(album: string, artist: string, title: string) {
+    constructor(track: any, current: boolean, state: string, parent: SonosQueueNode) {
         super();
-        this._album = album;
-        this._artist = artist;
-        this._title = title;
-        this.label = `${this._artist} - ${this._album} - ${this._title}`
+        this._parent = parent;
+        this._track = track;
+        this._current = current;
+        this._devicePlaying = state === 'playing';
+        // TODO: Get album artwork working
+        // this.tooltip = new MarkdownString(`![Album Art](${this._track.albumArtURI})`);
+        // this.tooltip.isTrusted = true;
+        this.setLabelAndContext();
     }
 
-    public updatePlayingState(artist: string, title: string, playing: boolean) {
-        if (!playing) {
-            this.setPlayingState(false);
-        } else {
-            this.setPlayingState(this.compare(artist, title));
-        }
+    public updatePlayingState(track: any, playing: boolean) {
+        this._current = (this._track.uri === track.uri)
+        this._devicePlaying = playing;
+        this.setLabelAndContext();
     }
 
-    private setPlayingState(playing: boolean) {
-        if (playing) {
+    private setLabelAndContext() {
+        this.label = `${this._track.artist} - ${this._track.album} - ${this._track.title}${(this._devicePlaying && this._current) ? '🎶' : ''}`
+        this.description = (this._devicePlaying && this._current) ? 'now playing' : '';
+        if (this._devicePlaying && this._current) {
             this.addToContext('>playingTrack');
             this.removeFromContext('>stoppedTrack');
-            this.description = 'now playing';
+
         } else {
             this.removeFromContext('>playingTrack');
             this.addToContext('>stoppedTrack');
-            this.description = '';
         }
-    }
-
-    private compare(artist: string, title: string): boolean {
-        if (artist === this._artist && title === this._title) {
-            return true;
-        }
-        return false;
     }
 }

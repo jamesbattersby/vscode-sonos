@@ -4,7 +4,7 @@ import {
     TreeView, TreeDataProvider, Event, EventEmitter, TreeItem, ProviderResult,
     ExtensionContext, window, commands
 } from 'vscode';
-import { SonosNode, SonosGroupNode } from './sonosNode';
+import { SonosNode, SonosGroupNode, SonosTrackNode } from './sonosNode';
 const { DeviceDiscovery } = require('sonos');
 
 export class SonosExplorer {
@@ -20,6 +20,9 @@ export class SonosExplorer {
         commands.registerCommand('sonosExplorer.pause', item => sonosNodeProvider.pause(item));
         commands.registerCommand('sonosExplorer.nextTrack', item => item.nextTrack());
         commands.registerCommand('sonosExplorer.previousTrack', item => item.previousTrack());
+
+        commands.registerCommand('sonosExplorer.playTrack', item => sonosNodeProvider.playTrack(item));
+        commands.registerCommand('sonosExplorer.stopTrack', item => sonosNodeProvider.stopTrack(item));
     }
 }
 
@@ -78,6 +81,14 @@ export class SonosNodeProvider implements TreeDataProvider<SonosNode> {
         this.refresh(item);
     }
 
+    public async stopTrack(item: SonosTrackNode) {
+        // TODO: Implement
+    }
+
+    public async playTrack(item: SonosTrackNode) {
+        // TODO: Implement
+    }
+
     private async getDevices(): Promise<SonosNode[]> {
         DeviceDiscovery().once('DeviceAvailable', (device: any) => {
             device.getAllGroups().then((groups: any) => {
@@ -85,16 +96,9 @@ export class SonosNodeProvider implements TreeDataProvider<SonosNode> {
                 groups.forEach((group: any) => {
                     let newNode: SonosGroupNode = new SonosGroupNode(group, this)
                     if (!this._groupNodes.find(node => node.label === newNode.label)) {
+                        // TODO: Insert new node in to array to be alphabetically sorted
                         this._groupNodes.push(newNode);
-                        newNode.getDevice().getCurrentState().then((result: any) => {
-                            if (result === 'playing') {
-                                newNode.addToContext('>stoppable');
-                            } else {
-                                newNode.addToContext('>playable');
-                            }
-                            this.refresh(newNode);
-                        });
-                        newNode.getDevice().on('PlayState', async (state: any) => {
+                        newNode.getCoordinatingDevice().on('PlayState', async (state: any) => {
                             if (state === 'playing') {
                                 newNode.addToContext(">stoppable");
                                 newNode.removeFromContext(">playable");
@@ -105,12 +109,13 @@ export class SonosNodeProvider implements TreeDataProvider<SonosNode> {
                             }
                             this.refresh(newNode);
                         });
-                        newNode.getDevice().on('CurrentTrack', async (track: any) => {
-                            newNode.setPlayingTrack(track.artist, track.title);
+                        newNode.getCoordinatingDevice().on('CurrentTrack', async (track: any) => {
+                            newNode.setPlayingTrack(track);
                             this.refresh(newNode);
                         });
-                        newNode.getDevice().on('QueueChanged', async (event: any) => {
-                            console.log(`Queue changed ${event}`);
+                        newNode.getCoordinatingDevice().on('QueueChanged', async (event: any) => {
+                            newNode.refreshQueue();
+                            this.refresh(newNode);
                         });
                         updated = true;
                     }
