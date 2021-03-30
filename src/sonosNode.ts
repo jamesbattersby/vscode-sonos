@@ -75,13 +75,14 @@ export class SonosGroupNode extends SonosNode {
     }
 
     public getChildren(): SonosNode[] {
+        this.refreshQueue();
         return this.children;
     }
 
     public refreshQueue() {
         this.children.forEach((childNode: SonosNode) => {
             if (childNode instanceof SonosQueueNode) {
-                childNode.updateQueue();
+                childNode.getChildren();
             }
         });
     }
@@ -213,7 +214,6 @@ export class SonosQueueNode extends SonosNode {
         this.label = 'Queue';
         this._parent = parent;
         this.collapsibleState = TreeItemCollapsibleState.Collapsed;
-        this.updateQueue();
     }
 
     public setPlayingTrack(track: any, playing: boolean) {
@@ -222,7 +222,7 @@ export class SonosQueueNode extends SonosNode {
         });
     }
 
-    public async updateQueue() {
+    public async getChildren() {
         this.children = [];
         let currentState: any = await this.getCoordinatingDevice().getCurrentState();
         let currentTrack: any = await this.getCoordinatingDevice().currentTrack();
@@ -230,6 +230,7 @@ export class SonosQueueNode extends SonosNode {
         currentQueue.items.forEach((track: any) => {
             this.children.push(new SonosTrackNode(track, track.uri === currentTrack.uri, currentState, this))
         })
+        return this.children;
     }
 
     public getCoordinatingDevice() {
