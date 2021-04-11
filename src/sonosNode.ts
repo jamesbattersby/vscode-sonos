@@ -227,9 +227,11 @@ export class SonosQueueNode extends SonosNode {
         let currentState: any = await this.getCoordinatingDevice().getCurrentState();
         let currentTrack: any = await this.getCoordinatingDevice().currentTrack();
         let currentQueue: any = await this.getCoordinatingDevice().getQueue();
-        currentQueue.items.forEach((track: any) => {
-            this.children.push(new SonosTrackNode(track, track.uri === currentTrack.uri, currentState, this))
-        })
+        if (currentQueue?.items) {
+            currentQueue.items.forEach((track: any) => {
+                this.children.push(new SonosTrackNode(track, track.uri === currentTrack.uri, currentState, this))
+            })
+        }
         return this.children;
     }
 
