@@ -193,11 +193,14 @@
 		}
 	},
 	"scripts": {
-		"vscode:prepublish": "npm run compile",
+		"vscode:prepublish": "webpack --mode production",
 		"compile": "tsc -p ./",
 		"watch": "tsc -watch -p ./",
 		"pretest": "npm run compile",
-		"test": "node ./out/test/runTest.js"
+		"test": "node ./out/test/runTest.js",
+		"webpack": "webpack --mode development",
+		"webpack-dev": "webpack --mode development --watch",
+		"test-compile": "tsc -p ./"
 	},
 	"devDependencies": {
 		"@types/glob": "^7.1.1",
@@ -206,9 +209,12 @@
 		"@types/vscode": "^1.54.0",
 		"glob": "^7.1.4",
 		"mocha": "^6.1.4",
+		"ts-loader": "^8.1.0",
 		"tslint": "^5.12.1",
 		"typescript": "^3.9.9",
-		"vscode-test": "^1.5.1"
+		"vscode-test": "^1.5.1",
+		"webpack": "^5.31.2",
+		"webpack-cli": "^4.6.0"
 	},
 	"dependencies": {
 		"dgram-as-promised": "^5.0.1",
